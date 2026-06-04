@@ -8,3 +8,4 @@ Requires **.NET 8.0 Runtime** installed
 
 - **:colormsg** - See all commands
 - **:colormsg** _[red/green/blue/cyan/purple]_ - Sets a color for your messages
+- **:colormsg shoutalways** - Converts chat messages into shout messages
