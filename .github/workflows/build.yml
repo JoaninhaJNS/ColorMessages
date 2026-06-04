@@ -1,0 +1,37 @@
+name: Build ColorMessages
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore
+        
+      - name: Publish Windows
+        run: |
+          dotnet publish -c Release -r win-x64 --self-contained false \
+          /p:SelfContained=false \
+          /p:PublishSingleFile=true \
+          /p:DebugType=None \
+          /p:DebugSymbols=false \
+          /p:AssemblyName=ColorMessages-win-x64 \
+          -o ./publish/win
+
+      - name: Upload Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: ColorMessages-win-x64
+          path: ./publish/win
