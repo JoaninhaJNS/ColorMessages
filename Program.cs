@@ -7,12 +7,13 @@ var ext = new GEarthExtension(new GEarthOptions
     Name = "ColorMessages",
     Description = "Chat with colors, requires HC",
     Author = "JoaninhaJNS",
-    Version = "1.0.0"
+    Version = "1.0.1"
 });
 
 string? activeColor = null;
 string[] colors = ["red", "purple", "blue", "cyan", "green"];
 bool? isUserVip = null;
+bool shoutAlways = false;
 
 void infoMsg(string message)
 {
@@ -41,12 +42,12 @@ ext.Intercept(In.ScrSendUserInfo, e =>
     e.Packet.Read<bool>();
     e.Packet.Read<int>();
     e.Packet.Read<int>();
-    var minutesLeft = e.Packet.Read<int>();
+    int minutesLeft = e.Packet.Read<int>();
     isUserVip = minutesLeft > 0;
 });
 
 ext.Intercept([Out.Chat, Out.Shout, Out.Whisper], e =>
-{  
+{
     string message = e.Packet.Read<string>();
     string input = message.Trim();
 
@@ -68,7 +69,8 @@ ext.Intercept([Out.Chat, Out.Shout, Out.Whisper], e =>
                        "[blue]:colormsg blue[/blue]\n" +
                        "[cyan]:colormsg cyan[/cyan]\n" +
                        "[green]:colormsg green[/green]\n" +
-                       ":colormsg default");
+                       ":colormsg default\n" +
+                       ":colormsg shoutalways - chat messages become shouts");
             e.Block();
             return;
         }
@@ -79,6 +81,14 @@ ext.Intercept([Out.Chat, Out.Shout, Out.Whisper], e =>
         {
             activeColor = null;
             infoMsg("Default color restored!");
+            e.Block();
+            return;
+        }
+
+        if (color == "shoutalways")
+        {
+            shoutAlways = !shoutAlways;
+            infoMsg(shoutAlways ? "[green]Shout always enabled![/green]" : "[red]Shout always disabled![/red]");
             e.Block();
             return;
         }
@@ -114,6 +124,11 @@ ext.Intercept([Out.Chat, Out.Shout, Out.Whisper], e =>
         {
             e.Packet.ReplaceAt<string>(0, $"@{activeColor}@ {message}");
         }
+    }
+
+    if (shoutAlways && ext.Messages.Is(e.Packet.Header, Out.Chat))
+    {
+        e.Packet.Header = ext.Messages.Resolve(Out.Shout);
     }
 });
 
